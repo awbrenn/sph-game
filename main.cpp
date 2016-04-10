@@ -6,12 +6,15 @@
  * Due Date:       3/8/2016
  */
 
-
+#define GL_GLEXT_PROTOTYPES 1
 #include <GL/gl.h>
 #include <GL/glut.h>
 #include <OpenImageIO/imageio.h>
 #include "SPHSolver.h"
 #include "CmdLineFind.h"
+#include <fcntl.h>
+#include <unistd.h>
+
 
 using namespace std;
 using namespace lux;
@@ -31,6 +34,9 @@ timespec start_time;
 string output_path;
 bool write_to_output;
 bool simulation_paused = false;
+float *color_source;
+unsigned int *display_map;
+unsigned int shader_program;
 
 
 //----------------------------------------------------
@@ -51,9 +57,50 @@ void handleError(const char* error_message, int kill)
 
 //----------------------------------------------------
 //
-//  Write images
+//  Read & Write images
 //
 //----------------------------------------------------
+
+
+void convertToDisplay()
+{
+  for (int i = 0; i < iwidth*iheight*3; ++i) { display_map[i] = 250; }//(unsigned char) (color_source[i] * 255.0f); }
+}
+
+
+int readOIIOImage( const char* fname)
+{
+  int channels;
+  ImageInput *in = ImageInput::create (fname);
+  if (! in) { return -1; }
+  ImageSpec spec;
+  in->open (fname, spec);
+  iwidth = (unsigned int) spec.width; // note iwidth and iheight are set to to image size
+  iheight = (unsigned int) spec.height;
+  channels = spec.nchannels;
+  float* pixels = new float[iwidth*iheight*channels];
+  color_source = new float[iwidth*iheight*channels]; // allocate appropriate space for image
+  display_map = new unsigned int[iwidth*iheight*channels];
+
+  in->read_image (TypeDesc::FLOAT, pixels);
+  long index = 0;
+  for( int j=0;j<iheight;j++)
+  {
+    for( int i=0;i<iwidth;i++ )
+    {
+      for( int c=0;c<channels;c++ )
+      {
+        color_source[ (i + iwidth*(iheight - j - 1))*channels + c ] = pixels[index++];
+      }
+    }
+  }
+  delete pixels;
+
+  in->close ();
+  delete in;
+
+  return 0;
+}
 
 
 void writeImage() {
@@ -130,6 +177,7 @@ void setupTheViewVolume()
 
 
 void drawParticles() {
+  glUseProgram((GLuint) 0);
   // draw particles
   glPointSize(2.5f);
   glBegin(GL_POINTS);
@@ -146,25 +194,97 @@ void drawParticles() {
 }
 
 
+
+void set_texture() {
+  convertToDisplay();
+  glBindTexture(GL_TEXTURE_2D,1);
+  glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,iwidth,iheight,0,GL_RGB,
+               GL_UNSIGNED_BYTE, display_map);
+  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+  glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
+}
+
+
 void drawScene()
 {
   struct point front[4] = {
-      {0.0f,0.0f,0.0f}, {0.0f,2.0f,0.0f}, {2.0f,2.0f,0.0f}, {2.0f,0.0f,0.0f} };
+      {0.0f,0.0f,-0.1f}, {0.0f,2.0f,-0.1f}, {2.0f,2.0f,-0.1f}, {2.0f,0.0f,-0.1f} };
+  float mytexcoords[4][2] = {{0.0,0.0},{1.0,0.0},{1.0,1.0},{0.0,1.0}};
 
 
-  // call for wireframe
-  glPolygonMode(GL_FRONT,GL_LINE);
-  glPolygonMode(GL_BACK,GL_LINE);
+  set_texture();
+  glClearColor(0.0,0.0,0.0,0.0);
+  glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
-  // fat yellow lines
-  glColor3f(1.0,1.0,0.0);
-  glLineWidth(2.0);
-
+  glUseProgram((GLuint) shader_program);		// THIS IS IT!
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D,1);
+  glEnable(GL_TEXTURE_2D);
   glBegin(GL_QUADS);
-  for(int i=0; i<4; i++) glVertex3f(front[i].x,front[i].y,front[i].z);
+  glNormal3f(0.0,0.0,1.0);
+
+  for(int i=0; i<4; i++) {
+    glTexCoord2fv(mytexcoords[i]);
+    glVertex3f(front[i].x,front[i].y,front[i].z);
+  }
   glEnd();
 
   drawParticles();
+}
+
+
+//----------------------------------------------------
+//
+//  Setup Shader
+//
+//----------------------------------------------------
+
+char *read_shader_program(char *filename)
+{
+  FILE *fp;
+  char *content = NULL;
+  int fd, count;
+  fd = open(filename,O_RDONLY);
+  count = (int) lseek(fd,0,SEEK_END);
+  close(fd);
+  content = (char *)calloc(1,(size_t)(count+1));
+  fp = fopen(filename,"r");
+  count = fread(content,sizeof(char),count,fp);
+  content[count] = '\0';
+  fclose(fp);
+  return content;
+}
+
+
+unsigned int setShaders()
+{
+  char *vs, *fs;
+  GLuint v, f, p;
+
+  v = glCreateShader(GL_VERTEX_SHADER);
+  f = glCreateShader(GL_FRAGMENT_SHADER);
+  vs = read_shader_program((char *) "/home/awbrenn/Documents/workspace/fluid2D/final_project/sim_tex.vert");
+  fs = read_shader_program((char *) "/home/awbrenn/Documents/workspace/fluid2D/final_project/sim_tex.frag");
+  glShaderSource(v,1,(const char **)&vs,NULL);
+  glShaderSource(f,1,(const char **)&fs,NULL);
+  free(vs);
+  free(fs);
+  glCompileShader(v);
+  glCompileShader(f);
+  p = glCreateProgram();
+  glAttachShader(p,f);
+  glAttachShader(p,v);
+  glLinkProgram(p);
+  return(p);
+}
+
+
+void set_uniform_parameters(unsigned int p)
+{
+  int location;
+  location = glGetUniformLocation(p,"mytexture");
+  glUniform1i(location,0);
 }
 
 
@@ -175,12 +295,12 @@ void drawScene()
 //----------------------------------------------------
 
 
-void initParticleSim(UPDATE_FUNCTION update_function, bool party_mode, float density_base, float beta, float gamma,
-                     float viscosity, float epsilon, const float h) {
+void initParticleSim(int number_of_particles, UPDATE_FUNCTION update_function, bool party_mode, float density_base,
+                     float beta, float gamma, float viscosity, float epsilon, const float h) {
 
   srand (static_cast <unsigned> (time(0)));
 
-  fluid = new SPHSolver(500, 0.0f, 2.0f, h);
+  fluid = new SPHSolver(number_of_particles, 0.0f, 2.0f, h);
   fluid->update_function = update_function;
   fluid->party_mode = party_mode;
 
@@ -312,6 +432,7 @@ void setNbCores( int nb )
 int main(int argc, char** argv) {
   CmdLineFind clf(argc, argv);
   output_path = clf.find("-output_path", "./output_images", "Output path for writing image sequence");
+  int number_of_particles = clf.find("-particles", 250, "Number of particles in sim");
   int write_on_start = clf.find("-write_on_start", 0, "Flag for whether to start writing output images at the start of "
                                 "the program or not");
   int party_mode = clf.find("-party_mode", 0, "Flag for starting in party mode or not");
@@ -342,7 +463,7 @@ int main(int argc, char** argv) {
 
   float h = 0.15;
 
-  initParticleSim(update_function, party_mode != 0, density_base, beta, gamma, viscosity, epsilon, h);
+  initParticleSim(number_of_particles, update_function, party_mode != 0, density_base, beta, gamma, viscosity, epsilon, h);
 
   // decide whether to write to output or not
   write_to_output = write_on_start != 0;
@@ -352,17 +473,26 @@ int main(int argc, char** argv) {
 
   setNbCores(4);
 
-
+  readOIIOImage("/home/awbrenn/Documents/workspace/fluid2D/final_project/background.jpg");
 
   // initialize glut window
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_RGBA | GLUT_MULTISAMPLE);
+
   glutInitWindowSize(iwidth, iheight);
   glutInitWindowPosition(100, 50);
   glutCreateWindow("2D SPH Particle Simulation");
-  glClearColor(0.0, 0.0, 0.0, 0.0);
+  glEnable(GL_DEPTH_TEST);
   glEnable(GL_MULTISAMPLE_ARB);
+  glEnable (GL_BLEND);
+  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   setupTheViewVolume();
+
+  set_texture();
+  shader_program = setShaders();
+  set_uniform_parameters(shader_program);
+
+
   glutDisplayFunc(callbackDisplay);
   glutKeyboardFunc(&callbackKeyboard);
   glutIdleFunc(&callbackIdle);
