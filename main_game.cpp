@@ -117,8 +117,8 @@ int sprogram;
 void render_scene()
 {
   int i;
-  float front[4][3]={{0.0,0.0,0.0},{0.0,2.0,0.0},{2.0,2.0,0.0},{2.0,0.0,0.0}};
-  float mytexcoords[4][2] = {{0.0,0.0},{0.0,1.0},{1.0,1.0},{1.0,0.0}};
+  float front[4][3]={{0.0,0.0,0.0},{2.0,0.0,0.0},{2.0,2.0,0.0},{0.0,2.0,0.0}};
+  float mytexcoords[4][2] = {{0.0,1.0},{1.0,1.0},{1.0,0.0},{0.0,0.0}};
 
   glClearColor(0.0,0.0,0.0,1.0);
   glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -147,8 +147,8 @@ unsigned int set_shaders()
 
   v = glCreateShader(GL_VERTEX_SHADER);
   f = glCreateShader(GL_FRAGMENT_SHADER);
-  vs = read_shader_program("/home/awbrenn/Documents/workspace/fluid2D/sph-game/phong_texcube.vert");
-  fs = read_shader_program("/home/awbrenn/Documents/workspace/fluid2D/sph-game/phong_texcube.frag");
+  vs = read_shader_program((char *) "/home/awbrenn/Documents/workspace/fluid2D/sph-game/phong_texcube.vert");
+  fs = read_shader_program((char *) "/home/awbrenn/Documents/workspace/fluid2D/sph-game/phong_texcube.frag");
   glShaderSource(v,1,(const char **)&vs,NULL);
   glShaderSource(f,1,(const char **)&fs,NULL);
   free(vs);
