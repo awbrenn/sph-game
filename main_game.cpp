@@ -11,8 +11,8 @@
 #include <math.h>
 #include <unistd.h>
 
-float eye[] = {M_SQRT2,2.0,2.0};
-float viewpt[] = {0.0,0.0,0.0};
+float eye[] = {1.0f,1.0f,1.0f};
+float viewpt[] = {1.0,1.0,0.0};
 float up[] = {0.0,1.0,0.0};
 
 char *read_shader_program(char *filename)
@@ -106,7 +106,7 @@ void view_volume()
 {
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective(45.0,1.0,1.0,40.0);
+  glOrtho(-1.0,1.0,-1.0,1.0,0.0,20.0);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   gluLookAt(eye[0],eye[1],eye[2],viewpt[0],viewpt[1],viewpt[2],up[0],up[1],up[2]);
@@ -117,15 +117,10 @@ int sprogram;
 void render_scene()
 {
   int i;
-  float front[4][3]={{0.0,0.0,1.0},{1.0,0.0,1.0},{1.0,1.0,1.0},{0.0,1.0,1.0}};
-  float back[4][3]={{0.0,0.0,0.0},{0.0,1.0,0.0},{1.0,1.0,0.0},{1.0,0.0,0.0}};
-  float left[4][3]={{0.0,0.0,0.0},{0.0,0.0,1.0},{0.0,1.0,1.0},{0.0,1.0,0.0}};
-  float right[4][3]={{1.0,0.0,0.0},{1.0,1.0,0.0},{1.0,1.0,1.0},{1.0,0.0,1.0}};
-  float top[4][3]={{0.0,1.0,0.0},{0.0,1.0,1.0},{1.0,1.0,1.0},{1.0,1.0,0.0}};
-  float bottom[4][3]={{0.0,0.0,0.0},{0.0,0.0,1.0},{1.0,0.0,1.0},{1.0,0.0,0.0}};
-  float mytexcoords[4][2] = {{0.0,1.0},{1.0,1.0},{1.0,0.0},{0.0,0.0}};
+  float front[4][3]={{0.0,0.0,0.0},{0.0,2.0,0.0},{2.0,2.0,0.0},{2.0,0.0,0.0}};
+  float mytexcoords[4][2] = {{0.0,0.0},{0.0,1.0},{1.0,1.0},{1.0,0.0}};
 
-  glClearColor(0.5,0.5,0.5,1.0);
+  glClearColor(0.0,0.0,0.0,1.0);
   glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
   glUseProgram(sprogram);		// THIS IS IT!
@@ -141,19 +136,6 @@ void render_scene()
   glEnd();
   glDisable(GL_TEXTURE_2D);
 
-  glUseProgram(0);
-  glBegin(GL_QUADS);
-  glNormal3f(0.0,0.0,-1.0);
-  for(i=0;i<4;i++) glVertex3f(back[i][0],back[i][1],back[i][2]);
-  glNormal3f(-1.0,0.0,0.0);
-  for(i=0;i<4;i++) glVertex3f(left[i][0],left[i][1],left[i][2]);
-  glNormal3f(1.0,0.0,0.0);
-  for(i=0;i<4;i++) glVertex3f(right[i][0],right[i][1],right[i][2]);
-  glNormal3f(0.0,1.0,0.0);
-  for(i=0;i<4;i++) glVertex3f(top[i][0],top[i][1],top[i][2]);
-  glNormal3f(0.0,-1.0,0.0);
-  for(i=0;i<4;i++) glVertex3f(bottom[i][0],bottom[i][1],bottom[i][2]);
-  glEnd();
   glutSwapBuffers();
 }
 
