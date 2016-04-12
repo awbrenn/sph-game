@@ -163,8 +163,8 @@ unsigned int set_shaders()
 
   v = glCreateShader(GL_VERTEX_SHADER);
   f = glCreateShader(GL_FRAGMENT_SHADER);
-  vs = read_shader_program((char *) "/home/awbrenn/Documents/workspace/fluid2D/sph-game/phong_texcube.vert");
-  fs = read_shader_program((char *) "/home/awbrenn/Documents/workspace/fluid2D/sph-game/phong_texcube.frag");
+  vs = read_shader_program((char *) "/home/awbrenn/Documents/workspace/fluid2D/sph-game/background_shader.vert");
+  fs = read_shader_program((char *) "/home/awbrenn/Documents/workspace/fluid2D/sph-game/background_shader.frag");
   glShaderSource(v,1,(const char **)&vs,NULL);
   glShaderSource(f,1,(const char **)&fs,NULL);
   free(vs);
