@@ -10,10 +10,13 @@
 #include <fcntl.h>
 #include <math.h>
 #include <unistd.h>
+#include "SPHSolver.h"
 
+SPHSolver *fluid;
 float eye[] = {1.0f,1.0f,1.0f};
 float viewpt[] = {1.0,1.0,0.0};
 float up[] = {0.0,1.0,0.0};
+GLuint sprogram;
 
 char *read_shader_program(char *filename)
 {
@@ -112,12 +115,10 @@ void view_volume()
   gluLookAt(eye[0],eye[1],eye[2],viewpt[0],viewpt[1],viewpt[2],up[0],up[1],up[2]);
 }
 
-int sprogram;
-
 void render_scene()
 {
   int i;
-  float front[4][3]={{0.0,0.0,0.0},{2.0,0.0,0.0},{2.0,2.0,0.0},{0.0,2.0,0.0}};
+  float front[4][3]={{0.0,0.0,-0.1f},{2.0,0.0,-0.1f},{2.0,2.0,-0.1f},{0.0,2.0,-0.1f}};
   float mytexcoords[4][2] = {{0.0,1.0},{1.0,1.0},{1.0,0.0},{0.0,0.0}};
 
   glClearColor(0.0,0.0,0.0,1.0);
@@ -136,12 +137,27 @@ void render_scene()
   glEnd();
   glDisable(GL_TEXTURE_2D);
 
+  glUseProgram(0);
+  // draw particles
+  glPointSize(2.5f);
+  glBegin(GL_POINTS);
+  std::vector<SPHParticle>::iterator pi = fluid->particles.begin();
+  while(pi != fluid->particles.end()) {
+    vector3 color = pi->color;
+    glColor3f(color.x, color.y, color.z);
+
+    vector2 position = pi->position;
+    glVertex3f(position.x, position.y, 0.0f);
+    ++pi;
+  }
+  glEnd();
+  glFlush();
+
   glutSwapBuffers();
 }
 
 unsigned int set_shaders()
 {
-  GLint vertCompiled, fragCompiled;
   char *vs, *fs;
   GLuint v, f, p;
 
@@ -181,8 +197,34 @@ void getout(unsigned char key, int x, int y)
 }
 
 
+void initParticleSim() {
+
+  srand (static_cast <unsigned> (time(0)));
+
+  fluid = new SPHSolver(100, 0.0f, 2.0f, 0.15);
+  fluid->update_function = LEAP_FROG;
+  fluid->party_mode = false;
+
+  // setting force parameters
+  fluid->force.density_base = 141.471060526f;
+  fluid->force.beta = 1.0f;
+  fluid->force.gamma = 3.0f;
+  fluid->force.viscosity = 1.0f;
+  fluid->force.epsilon = 0.1f;
+}
+
+
+
+void callbackIdle() {
+  float delta_time = (1.0f/48.0f);
+  fluid->update(delta_time);
+  glutPostRedisplay();
+}
+
+
 int main(int argc, char **argv)
 {
+  initParticleSim();
   glutInit(&argc,argv);
   glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA| GLUT_MULTISAMPLE);
   glutInitWindowPosition(100, 100);
@@ -197,6 +239,7 @@ int main(int argc, char **argv)
   sprogram = set_shaders();
   set_uniform_parameters(sprogram);
   glutDisplayFunc(render_scene);
+  glutIdleFunc(&callbackIdle);
   glutKeyboardFunc(getout);
   glutMainLoop();
   return 0;
