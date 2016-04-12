@@ -70,41 +70,6 @@ void load_texture(char *filename)
   free(texture_bytes);
 }
 
-void lights()
-{
-  float light0_ambient[] = { 0.0, 0.0, 0.0, 0.0 };
-  float light0_diffuse[] = { 1.0, 1.0, 1.0, 0.0 };
-  float light0_specular[] = { 1.0, 1.0, 1.0, 0.0 };
-  float light0_position[] = { M_SQRT2, 2.0, 2.0, 1.0 };
-  float light0_direction[] = { -M_SQRT2, -2.0, -2.0, 1.0};
-
-  glLightModelfv(GL_LIGHT_MODEL_AMBIENT,light0_ambient);
-  glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER,1);
-  glLightfv(GL_LIGHT0,GL_AMBIENT,light0_ambient);
-  glLightfv(GL_LIGHT0,GL_DIFFUSE,light0_diffuse);
-  glLightfv(GL_LIGHT0,GL_SPECULAR,light0_specular);
-  glLightf(GL_LIGHT0,GL_SPOT_EXPONENT,0.0);
-  glLightf(GL_LIGHT0,GL_SPOT_CUTOFF,180.0);
-  glLightf(GL_LIGHT0,GL_CONSTANT_ATTENUATION,1.0);
-  glLightf(GL_LIGHT0,GL_LINEAR_ATTENUATION,0.0);
-  glLightf(GL_LIGHT0,GL_QUADRATIC_ATTENUATION,0.0);
-  glLightfv(GL_LIGHT0,GL_POSITION,light0_position);
-  glLightfv(GL_LIGHT0,GL_SPOT_DIRECTION,light0_direction);
-  glEnable(GL_LIGHTING);
-  glEnable(GL_LIGHT0);
-}
-
-void material()
-{
-  float mat_diffuse[] = {1.0,1.0,0.0,1.0};
-  float mat_specular[] = {1.0,1.0,1.0,1.0};
-  float mat_shininess[] = {2.0};
-
-  glMaterialfv(GL_FRONT,GL_DIFFUSE,mat_diffuse);
-  glMaterialfv(GL_FRONT,GL_SPECULAR,mat_specular);
-  glMaterialfv(GL_FRONT,GL_SHININESS,mat_shininess);
-}
-
 void view_volume()
 {
   glMatrixMode(GL_PROJECTION);
@@ -139,12 +104,13 @@ void render_scene()
 
   glUseProgram(0);
   // draw particles
-  glPointSize(2.5f);
+  glPointSize(7.5f);
   glBegin(GL_POINTS);
   std::vector<SPHParticle>::iterator pi = fluid->particles.begin();
   while(pi != fluid->particles.end()) {
     vector3 color = pi->color;
     glColor3f(color.x, color.y, color.z);
+    //glColor3f(1.0f, 0.0f, 0.0f);
 
     vector2 position = pi->position;
     glVertex3f(position.x, position.y, 0.0f);
@@ -234,8 +200,6 @@ int main(int argc, char **argv)
   glEnable(GL_MULTISAMPLE_ARB);
   load_texture(argv[1]);
   view_volume();
-  lights();
-  material();
   sprogram = set_shaders();
   set_uniform_parameters(sprogram);
   glutDisplayFunc(render_scene);
