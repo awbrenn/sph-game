@@ -26,8 +26,10 @@ class SPHSolver {
     void createOccupancyVolume(vector2 ovllc, vector2 ovurc, float h);
     void leapFrog(float dt);
     void sixth(float dt);
+    void bounceX(SPHParticle *p);
+    void bounceY(SPHParticle *p);
 
-  public:
+public:
     UPDATE_FUNCTION update_function;
     float upper_bound;
     float lower_bound;

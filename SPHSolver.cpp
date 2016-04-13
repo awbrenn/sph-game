@@ -44,44 +44,49 @@ void SPHSolver::randomizeColor(SPHParticle *p) {
 }
 
 
+void SPHSolver::bounceX(SPHParticle *p) {
+  p->velocity.x = (-1.0f)*p->velocity.x*dampening;
+  p->position.x = p->prev_position.x + 0.01f * p->velocity.unit().x;// lower_bound - p->position.x;
+}
+
+void SPHSolver::bounceY(SPHParticle *p) {
+  p->velocity.y = (-1.0f)*p->velocity.y*dampening;
+  p->position.y = p->prev_position.y + 0.01f * p->velocity.unit().y;// lower_bound - p->position.y;
+}
+
+
 void SPHSolver::enforceBoundary(SPHParticle *p) {
   bool collision = false;
 
   // enforce top and bottom bounds
   if (p->position.y < lower_bound) {
-    p->position.y = lower_bound - p->position.y;
-    p->velocity.y = (-1.0f)*p->velocity.y*dampening;
+    bounceY(p);
     collision = true;
   }
   else if (p->position.y > upper_bound) {
-    p->position.y = upper_bound - (p->position.y - upper_bound);
-    p->velocity.y = (-1.0f)*p->velocity.y*dampening;
+    bounceY(p);
     collision = true;
   }
 
   // enforce left to right bounds
   if (p->position.x < lower_bound) {
-    p->position.x = lower_bound - p->position.x;
-    p->velocity.x = (-1.0f)*p->velocity.x*dampening;
+    bounceX(p);
     collision = true;
   }
   else if (p->position.x > upper_bound) {
-    p->position.x = upper_bound - (p->position.x - upper_bound);
-    p->velocity.x = (-1.0f)*p->velocity.x*dampening;
+    bounceX(p);
     collision = true;
   }
 
   p->setCollisionArea(collision_texture, ct_width, ct_height);
 
   if (p->prev_carea == above_below and p->carea == inside_obstruction) {
-    p->velocity.y = (-1.0f)*p->velocity.y*dampening;
-    p->position.y = p->position.y + 0.01f * p->velocity.unit().y;
+    bounceY(p);
     collision = true;
   }
 
   if (p->prev_carea == left_right and p->carea == inside_obstruction) {
-    p->velocity.x = (-1.0f)*p->velocity.x*dampening;
-    p->position.x = p->position.x + 0.01f * p->velocity.unit().x;
+    bounceX(p);
     collision = true;
   }
 
