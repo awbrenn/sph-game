@@ -22,7 +22,7 @@ float getRandomFloatBetweenValues (float lower_bound, float upper_bound) {
 SPHSolver::SPHSolver(unsigned int number_of_particles, const float _lower_bound, const float _upper_bound, const float h) {
   lower_bound = _lower_bound;
   upper_bound = _upper_bound;
-  dampening = 0.8f;
+  dampening = 1.0f;
   update_function = SIXTH;
   party_mode = false;
   occupancy_volume = new SPHOccupancyVolume();
@@ -75,13 +75,13 @@ void SPHSolver::enforceBoundary(SPHParticle *p) {
 
   if (p->prev_carea == above_below and p->carea == inside_obstruction) {
     p->velocity.y = (-1.0f)*p->velocity.y*dampening;
-    p->position.y = p->position.y + 0.2f * p->velocity.unit().y;
+    p->position.y = p->position.y + 0.01f * p->velocity.unit().y;
     collision = true;
   }
 
   if (p->prev_carea == left_right and p->carea == inside_obstruction) {
     p->velocity.x = (-1.0f)*p->velocity.x*dampening;
-    p->position.x = p->position.x + 0.2f * p->velocity.unit().x;
+    p->position.x = p->position.x + 0.01f * p->velocity.unit().x;
     collision = true;
   }
 
@@ -176,6 +176,7 @@ void SPHSolver::leapFrog(float dt) {
     pi->acceleration = force.evaluateForce(&particles, &(*pi), occupancy_volume);
     pi->velocity.x += pi->acceleration.x*dt*2.0f;
     pi->velocity.y += pi->acceleration.y*dt*2.0f;
+    //pi->capVelocity(max_velocity);
     pi->position.x += pi->velocity.x*dt;
     pi->position.y += pi->velocity.y*dt;
 
@@ -194,9 +195,9 @@ void SPHSolver::leapFrog(float dt) {
     red_percentage = base_percentage;
     blue_percentage = 1.0f - red_percentage;
 
-    pi->color.x = red_percentage;
-    pi->color.y = 0.0f;
-    pi->color.z = blue_percentage;
+    pi->color.r = red_percentage;
+    pi->color.g = 0.0f;
+    pi->color.b = blue_percentage;
 
     ++pi;
   }

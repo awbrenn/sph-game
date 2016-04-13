@@ -41,7 +41,7 @@ class SPHParticle {
     collision_area prev_carea;
     collision_area carea;
     void setCollisionArea(unsigned char *collision_texture, int width, int height);
-
+    void capVelocity(float max_velocity);
     SPHParticle(const vector2 _position, const vector2 _velocity, const float radius);
 };
 

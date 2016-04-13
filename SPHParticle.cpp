@@ -30,6 +30,12 @@ fcolor SPHParticle::getColor(unsigned char *collision_texture, int index) {
   return color;
 }
 
+
+void SPHParticle::capVelocity(float max_velocity) {
+  if (velocity.length() > max_velocity) { velocity = velocity.unit() * max_velocity; }
+}
+
+
 void SPHParticle::setCollisionArea(unsigned char *collision_texture, int width, int height) {
   int x, y, size, index;
   fcolor color;

@@ -172,6 +172,7 @@ void initParticleSim() {
   fluid->force.gamma = 3.0f;
   fluid->force.viscosity = 1.0f;
   fluid->force.epsilon = 0.1f;
+  fluid->max_velocity = 1.0f;
 }
 
 
