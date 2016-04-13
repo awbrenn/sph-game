@@ -176,7 +176,7 @@ void SPHSolver::leapFrog(float dt) {
     pi->acceleration = force.evaluateForce(&particles, &(*pi), occupancy_volume);
     pi->velocity.x += pi->acceleration.x*dt*2.0f;
     pi->velocity.y += pi->acceleration.y*dt*2.0f;
-    //pi->capVelocity(max_velocity);
+    pi->capVelocity(max_velocity);
     pi->position.x += pi->velocity.x*dt;
     pi->position.y += pi->velocity.y*dt;
 

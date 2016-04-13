@@ -36,7 +36,42 @@ char *read_shader_program(char *filename)
   return content;
 }
 
-void load_texture(char *filename)
+void load_background_texture(char *filename) {
+  FILE *fptr;
+  char buf[512], *parse;
+  int im_size, im_width, im_height, max_color;
+  unsigned char *texture_bytes;
+
+  fptr=fopen(filename,"r");
+  fgets(buf,512,fptr);
+  do{
+    fgets(buf,512,fptr);
+  } while(buf[0]=='#');
+  parse = (char *)strtok(buf," \t");
+  im_width = atoi(parse);
+
+  parse = (char *)strtok(NULL," \n");
+  im_height = atoi(parse);
+
+  fgets(buf,512,fptr);
+  parse = (char *)strtok(buf," \n");
+  max_color = atoi(parse);
+
+  im_size = im_width*im_height;
+  texture_bytes = (unsigned char *)calloc(3,im_size);
+  fread(texture_bytes,3,im_size,fptr);
+  fclose(fptr);
+
+  glBindTexture(GL_TEXTURE_2D,1);
+  glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,im_width,im_height,0,GL_RGB,
+               GL_UNSIGNED_BYTE,texture_bytes);
+  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+  glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
+  free(texture_bytes);
+}
+
+void load_collision_texture(char *filename)
 {
   FILE *fptr;
   char buf[512], *parse;
@@ -72,7 +107,6 @@ void load_texture(char *filename)
   fluid->collision_texture = texture_bytes;
   fluid->ct_width = im_width;
   fluid->ct_height = im_height;
-  //free(texture_bytes);
 }
 
 void view_volume()
@@ -162,7 +196,7 @@ void initParticleSim() {
 
   srand (static_cast <unsigned> (time(0)));
 
-  fluid = new SPHSolver(10, 0.0f, 2.0f, 0.15);
+  fluid = new SPHSolver(50, 0.0f, 2.0f, 0.15);
   fluid->update_function = LEAP_FROG;
   fluid->party_mode = false;
 
@@ -172,7 +206,7 @@ void initParticleSim() {
   fluid->force.gamma = 3.0f;
   fluid->force.viscosity = 1.0f;
   fluid->force.epsilon = 0.1f;
-  fluid->max_velocity = 1.0f;
+  fluid->max_velocity = 8.0f;
 }
 
 
@@ -227,7 +261,8 @@ int main(int argc, char **argv)
   glutCreateWindow("sph-game");
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_MULTISAMPLE_ARB);
-  load_texture(argv[1]);
+  load_collision_texture(argv[1]);
+  load_background_texture(argv[2]);
   view_volume();
   sprogram = set_shaders();
   set_uniform_parameters(sprogram);
