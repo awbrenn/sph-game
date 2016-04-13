@@ -35,6 +35,8 @@ class SPHSolver {
     float highest_density;
     float dampening;
     bool party_mode;
+    unsigned char *collision_texture;
+    int ct_width, ct_height;
     std::vector<SPHParticle> particles;
     SPHOccupancyVolume *occupancy_volume;
     SPHForce force;

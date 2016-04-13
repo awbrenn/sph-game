@@ -12,6 +12,8 @@
 #include <unistd.h>
 #include "SPHSolver.h"
 
+using namespace std;
+
 SPHSolver *fluid;
 float eye[] = {1.0f,1.0f,1.0f};
 float viewpt[] = {1.0,1.0,0.0};
@@ -67,7 +69,10 @@ void load_texture(char *filename)
   glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
   glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
   glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
-  free(texture_bytes);
+  fluid->collision_texture = texture_bytes;
+  fluid->ct_width = im_width;
+  fluid->ct_height = im_height;
+  //free(texture_bytes);
 }
 
 void view_volume()
@@ -108,8 +113,8 @@ void render_scene()
   glBegin(GL_POINTS);
   std::vector<SPHParticle>::iterator pi = fluid->particles.begin();
   while(pi != fluid->particles.end()) {
-    vector3 color = pi->color;
-    glColor3f(color.x, color.y, color.z);
+    fcolor color = pi->color;
+    glColor3f(color.r, color.g, color.b);
     //glColor3f(1.0f, 0.0f, 0.0f);
 
     vector2 position = pi->position;
@@ -152,22 +157,12 @@ void set_uniform_parameters(unsigned int p)
   glUniform1i(location,0);
 }
 
-void getout(unsigned char key, int x, int y)
-{
-  switch(key) {
-    case 'q':
-      exit(1);
-    default:
-      break;
-  }
-}
-
 
 void initParticleSim() {
 
   srand (static_cast <unsigned> (time(0)));
 
-  fluid = new SPHSolver(100, 0.0f, 2.0f, 0.15);
+  fluid = new SPHSolver(10, 0.0f, 2.0f, 0.15);
   fluid->update_function = LEAP_FROG;
   fluid->party_mode = false;
 
@@ -188,6 +183,39 @@ void callbackIdle() {
 }
 
 
+void callbackKeyboard( unsigned char key, int x, int y )
+{
+  switch (key)
+  {
+    case 'q':
+    cout << "Exiting Program" << endl;
+    exit(0);
+
+    case 'w':
+      fluid->force.gravity = {0.0f, 9.8f};
+      cout << "Gravity is now up" << endl;
+      break;
+
+    case 'a':
+      fluid->force.gravity = {-9.8f, 0.0f};
+      cout << "Gravity is now left" << endl;
+      break;
+
+    case 's':
+      fluid->force.gravity = {0.0f, -9.8f};
+      cout << "Gravity is now down" << endl;
+      break;
+
+    case 'd':
+      fluid->force.gravity = {9.8f, 0.0f};
+      cout << "Gravity is now right" << endl;
+      break;
+    default:
+    break;
+  }
+}
+
+
 int main(int argc, char **argv)
 {
   initParticleSim();
@@ -195,7 +223,7 @@ int main(int argc, char **argv)
   glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA| GLUT_MULTISAMPLE);
   glutInitWindowPosition(100, 100);
   glutInitWindowSize(768,768);
-  glutCreateWindow("phong-shaded, textured cube ");
+  glutCreateWindow("sph-game");
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_MULTISAMPLE_ARB);
   load_texture(argv[1]);
@@ -204,7 +232,7 @@ int main(int argc, char **argv)
   set_uniform_parameters(sprogram);
   glutDisplayFunc(render_scene);
   glutIdleFunc(&callbackIdle);
-  glutKeyboardFunc(getout);
+  glutKeyboardFunc(callbackKeyboard);
   glutMainLoop();
   return 0;
 }

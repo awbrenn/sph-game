@@ -22,15 +22,15 @@ float getRandomFloatBetweenValues (float lower_bound, float upper_bound) {
 SPHSolver::SPHSolver(unsigned int number_of_particles, const float _lower_bound, const float _upper_bound, const float h) {
   lower_bound = _lower_bound;
   upper_bound = _upper_bound;
-  dampening = 1.0f;
+  dampening = 0.8f;
   update_function = SIXTH;
   party_mode = false;
   occupancy_volume = new SPHOccupancyVolume();
   // initialize particles
   for (unsigned int i = 0; i < number_of_particles; ++i) {
     vector2 position;
-    position.x = getRandomFloatBetweenValues(lower_bound+0.5f, upper_bound-0.5f);
-    position.y = getRandomFloatBetweenValues(lower_bound+1.0f, upper_bound-0.5f);
+    position.x = getRandomFloatBetweenValues(lower_bound+1.5f, upper_bound);
+    position.y = getRandomFloatBetweenValues(lower_bound+1.75f, upper_bound);
     vector2 velocity = {0.0f, 0.0f};
     particles.push_back(SPHParticle(position, velocity, h));
   }
@@ -38,9 +38,9 @@ SPHSolver::SPHSolver(unsigned int number_of_particles, const float _lower_bound,
 
 
 void SPHSolver::randomizeColor(SPHParticle *p) {
-  p->color.x = getRandomFloatBetweenValues(0.1, 0.9);
-  p->color.y = getRandomFloatBetweenValues(0.1, 0.9);
-  p->color.z = getRandomFloatBetweenValues(0.1, 0.9);
+  p->color.r = getRandomFloatBetweenValues(0.1, 0.9);
+  p->color.g = getRandomFloatBetweenValues(0.1, 0.9);
+  p->color.b = getRandomFloatBetweenValues(0.1, 0.9);
 }
 
 
@@ -70,6 +70,21 @@ void SPHSolver::enforceBoundary(SPHParticle *p) {
     p->velocity.x = (-1.0f)*p->velocity.x*dampening;
     collision = true;
   }
+
+  p->setCollisionArea(collision_texture, ct_width, ct_height);
+
+  if (p->prev_carea == above_below and p->carea == inside_obstruction) {
+    p->velocity.y = (-1.0f)*p->velocity.y*dampening;
+    p->position.y = p->position.y + 0.2f * p->velocity.unit().y;
+    collision = true;
+  }
+
+  if (p->prev_carea == left_right and p->carea == inside_obstruction) {
+    p->velocity.x = (-1.0f)*p->velocity.x*dampening;
+    p->position.x = p->position.x + 0.2f * p->velocity.unit().x;
+    collision = true;
+  }
+
   if (collision && party_mode) { randomizeColor(p); }
 }
 

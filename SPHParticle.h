@@ -10,20 +10,37 @@
 #define SPHPARTICLE_H
 #include "vector2.h"
 
-typedef struct vector3 {
-  float x, y, z;
-} vector3;
+typedef struct fcolor {
+  float r;
+  float g;
+  float b;
+} fcolor;
+
+typedef enum collision_area {
+  left_right = 0,
+  above_below = 1,
+  inside_obstruction = 2,
+  free_area = 3
+} collision_area;
+
 
 class SPHParticle {
+  private:
+  fcolor getColor(unsigned char *collision_texture, int index);
+
   public:
     vector2 position;
+    vector2 prev_position;
     vector2 velocity;
     vector2 acceleration;
-    vector3 color;
+    fcolor color;
     float radius;
     float mass;
     float density;
     float pressure;
+    collision_area prev_carea;
+    collision_area carea;
+    void setCollisionArea(unsigned char *collision_texture, int width, int height);
 
     SPHParticle(const vector2 _position, const vector2 _velocity, const float radius);
 };
