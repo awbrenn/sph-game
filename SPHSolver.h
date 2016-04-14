@@ -14,6 +14,7 @@
 #include "SPHOccupancyVolume.h"
 #include "math.h"
 #include <iostream>
+#include <algorithm>
 
 enum UPDATE_FUNCTION {LEAP_FROG, SIXTH};
 
@@ -28,9 +29,12 @@ class SPHSolver {
     void sixth(float dt);
     void bounceX(SPHParticle *p);
     void bounceY(SPHParticle *p);
+    void removeFinishedParticles();
 
 public:
     UPDATE_FUNCTION update_function;
+    unsigned int start_particles_count;
+    unsigned int current_particles_count;
     float upper_bound;
     float lower_bound;
     float highest_velocity;

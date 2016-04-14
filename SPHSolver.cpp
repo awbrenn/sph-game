@@ -21,6 +21,8 @@ float getRandomFloatBetweenValues (float lower_bound, float upper_bound) {
 
 SPHSolver::SPHSolver(unsigned int number_of_particles, const float _lower_bound, const float _upper_bound, vector2 x_offsets,
                      vector2 y_offsets, const float h) {
+  start_particles_count = number_of_particles;
+  current_particles_count = start_particles_count;
   lower_bound = _lower_bound;
   upper_bound = _upper_bound;
   dampening = 1.0f;
@@ -139,6 +141,19 @@ void SPHSolver::createOccupancyVolume(vector2 ovllc, vector2 ovurc, float h) {
   occupancy_volume->cells.resize(ovnx*ovny);
 }
 
+static bool eraseParticlePredicate(const SPHParticle &p) {
+  bool result = false;
+
+  if (p.carea == finished) { result = true; }
+
+  return result;
+}
+
+void SPHSolver::removeFinishedParticles() {
+
+  particles.erase( std::remove_if( particles.begin(), particles.end(), eraseParticlePredicate ), particles.end());
+}
+
 
 void SPHSolver::leapFrog(float dt) {
   // occupancy volume lower left corner and upper right corner
@@ -160,6 +175,8 @@ void SPHSolver::leapFrog(float dt) {
 
     ++pi;
   }
+
+  removeFinishedParticles();
 
   occupancy_volume->ovllc = ovllc;
   occupancy_volume->ovurc = ovurc;
@@ -192,6 +209,9 @@ void SPHSolver::leapFrog(float dt) {
     enforceBoundary(&(*pi));
     ++pi;
   }
+
+  removeFinishedParticles();
+  current_particles_count = (unsigned int) particles.size();
 
   pi = particles.begin();
   while(pi != particles.end()) {

@@ -50,18 +50,13 @@ void SPHParticle::setCollisionArea(unsigned char *collision_texture, int width, 
   color = getColor(collision_texture, index);
 
 
-  if (color.r == 0 and color.g == 0 and color.b == 0) {
-    prev_carea = carea;
-    new_carea = inside_obstruction;
-  }
-  else if (color.r == 255 and color.g == 255 and color.b == 255) {
-    prev_carea = carea;
-    new_carea = above_below;
-  }
-  else if (color.r == 255 and color.g == 0 and color.b == 0) {
-    prev_carea = carea;
-    new_carea = left_right;
-  }
+  if (color.r == 0 and color.g == 0 and color.b == 0) { new_carea = inside_obstruction; }
+
+  else if (color.r == 255 and color.g == 255 and color.b == 255) { new_carea = above_below; }
+
+  else if (color.r == 255 and color.g == 0 and color.b == 0) { new_carea = left_right; }
+
+  else if (color.r == 0 and color.g == 255 and color.b == 1) { new_carea = finished; }
 
   // set new attributes;
   prev_position = position;
