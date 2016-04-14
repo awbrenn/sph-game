@@ -200,35 +200,40 @@ void set_uniform_parameters(unsigned int p)
 }
 
 
-void callbackIdle() {
-  if (game_controller.game_mode == level) {
-    float delta_time = (1.0f / 48.0f);
-    game_controller.current_level->fluid->update(delta_time);
-    glutPostRedisplay();
-  }
-}
-
-
 void loadLevel(unsigned int level_index) {
   // update the game_controller
   game_controller.current_level = &game_controller.levels[level_index];
   game_controller.level_index = level_index;
   game_controller.game_mode = level;
+  game_controller.level_index++;
 
   // load textures
   load_background_texture(game_controller.current_level->background_texture);
   load_collision_texture(game_controller.current_level->collision_texture);
 }
 
-void loadTextScreen(unsigned int screen_index) {
+void loadScreen(unsigned int screen_index) {
   // update the game_controller
   game_controller.screen_index = screen_index;
   game_controller.game_mode = screen;
+  game_controller.screen_index++;
 
   // load screen background texture
   load_background_texture(game_controller.screens[screen_index].background_texture);
 }
 
+
+void callbackIdle() {
+  if (game_controller.game_mode == level) {
+    float delta_time = (1.0f / 48.0f);
+    game_controller.current_level->fluid->update(delta_time);
+    game_controller.level_completion = 1.0f -
+            ((float) (game_controller.current_level->fluid->current_particles_count) /
+             (float) (game_controller.current_level->fluid->start_particles_count));
+    if (game_controller.level_completion == 1.0f) { loadScreen(game_controller.screen_index); }
+    glutPostRedisplay();
+  }
+}
 
 void callbackKeyboard( unsigned char key, int x, int y )
 {
@@ -240,26 +245,36 @@ void callbackKeyboard( unsigned char key, int x, int y )
     exit(0);
 
     case 'w':
-      game_controller.current_level->fluid->force.gravity = {0.0f, gravity_magnitude};
-      cout << "Gravity is now up" << endl;
+      if (game_controller.game_mode == level) {
+        game_controller.current_level->fluid->force.gravity = {0.0f, gravity_magnitude};
+        cout << "Gravity is now up" << endl;
+      }
       break;
 
     case 'a':
-      game_controller.current_level->fluid->force.gravity = {-1.0f * gravity_magnitude, 0.0f};
-      cout << "Gravity is now left" << endl;
+      if (game_controller.game_mode == level) {
+        game_controller.current_level->fluid->force.gravity = {-1.0f * gravity_magnitude, 0.0f};
+        cout << "Gravity is now left" << endl;
+      }
       break;
 
     case 's':
-      game_controller.current_level->fluid->force.gravity = {0.0f, -1.0f * gravity_magnitude};
-      cout << "Gravity is now down" << endl;
+      if (game_controller.game_mode == level) {
+        game_controller.current_level->fluid->force.gravity = {0.0f, -1.0f * gravity_magnitude};
+        cout << "Gravity is now down" << endl;
+      }
       break;
 
     case 'd':
-      game_controller.current_level->fluid->force.gravity = {gravity_magnitude, 0.0f};
-      cout << "Gravity is now right" << endl;
+      if (game_controller.game_mode == level) {
+        game_controller.current_level->fluid->force.gravity = {gravity_magnitude, 0.0f};
+        cout << "Gravity is now right" << endl;
+      }
       break;
     case (char) 13: // enter_pressed
-      loadLevel(0);
+      if (game_controller.game_mode == screen) {
+        loadLevel(game_controller.level_index);
+      }
       break;
     default:
     break;
@@ -278,6 +293,7 @@ void storeLevels() {
 
 void storeTextScreens() {
   game_controller.screens.push_back(textScreen((char *)"/home/awbrenn/Documents/workspace/fluid2D/sph-game/background2_ct.ppm"));
+  game_controller.screens.push_back(textScreen((char *)"/home/awbrenn/Documents/workspace/fluid2D/sph-game/background2_ct.ppm"));
 }
 
 int main(int argc, char **argv)
@@ -293,7 +309,7 @@ int main(int argc, char **argv)
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_MULTISAMPLE_ARB);
 
-  loadTextScreen(0);
+  loadScreen(0);
 
   view_volume();
   sprogram = set_shaders();

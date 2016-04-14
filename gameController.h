@@ -18,6 +18,7 @@ class gameController {
   public:
     unsigned int level_index = 0;
     unsigned int screen_index = 0;
+    float level_completion = 0.0f;
     gameLevel * current_level;
     std::vector<gameLevel> levels;
     std::vector<textScreen> screens;
