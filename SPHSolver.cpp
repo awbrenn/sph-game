@@ -19,7 +19,8 @@ float getRandomFloatBetweenValues (float lower_bound, float upper_bound) {
 }
 
 
-SPHSolver::SPHSolver(unsigned int number_of_particles, const float _lower_bound, const float _upper_bound, const float h) {
+SPHSolver::SPHSolver(unsigned int number_of_particles, const float _lower_bound, const float _upper_bound, vector2 x_offsets,
+                     vector2 y_offsets, const float h) {
   lower_bound = _lower_bound;
   upper_bound = _upper_bound;
   dampening = 1.0f;
@@ -29,8 +30,8 @@ SPHSolver::SPHSolver(unsigned int number_of_particles, const float _lower_bound,
   // initialize particles
   for (unsigned int i = 0; i < number_of_particles; ++i) {
     vector2 position;
-    position.x = getRandomFloatBetweenValues(lower_bound+1.5f, upper_bound);
-    position.y = getRandomFloatBetweenValues(lower_bound+1.75f, upper_bound);
+    position.x = getRandomFloatBetweenValues(lower_bound + x_offsets.x, upper_bound - x_offsets.y);
+    position.y = getRandomFloatBetweenValues(lower_bound + y_offsets.x, upper_bound - y_offsets.y);
     vector2 velocity = {0.0f, 0.0f};
     particles.push_back(SPHParticle(position, velocity, h));
   }

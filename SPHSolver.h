@@ -45,7 +45,8 @@ public:
     SPHForce force;
 
 
-    SPHSolver(unsigned int number_of_particles, const float upper_bound, const float lower_bound, const float h);
+    SPHSolver(unsigned int number_of_particles, const float upper_bound, const float lower_bound, vector2 x_offsets,
+              vector2 y_offsets, const float h);
     void update(const float dt);
 };
 

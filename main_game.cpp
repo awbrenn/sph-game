@@ -11,10 +11,11 @@
 #include <math.h>
 #include <unistd.h>
 #include "SPHSolver.h"
+#include "gameLevel.h"
 
 using namespace std;
 
-SPHSolver *fluid;
+gameLevel *current_level;
 float eye[] = {1.0f,1.0f,1.0f};
 float viewpt[] = {1.0,1.0,0.0};
 float up[] = {0.0,1.0,0.0};
@@ -98,15 +99,9 @@ void load_collision_texture(char *filename)
   fread(texture_bytes,3,im_size,fptr);
   fclose(fptr);
 
-  glBindTexture(GL_TEXTURE_2D,1);
-  glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,im_width,im_height,0,GL_RGB,
-               GL_UNSIGNED_BYTE,texture_bytes);
-  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-  glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
-  fluid->collision_texture = texture_bytes;
-  fluid->ct_width = im_width;
-  fluid->ct_height = im_height;
+  current_level->fluid->collision_texture = texture_bytes;
+  current_level->fluid->ct_width = im_width;
+  current_level->fluid->ct_height = im_height;
 }
 
 void view_volume()
@@ -145,8 +140,8 @@ void render_scene()
   // draw particles
   glPointSize(7.5f);
   glBegin(GL_POINTS);
-  std::vector<SPHParticle>::iterator pi = fluid->particles.begin();
-  while(pi != fluid->particles.end()) {
+  std::vector<SPHParticle>::iterator pi = current_level->fluid->particles.begin();
+  while(pi != current_level->fluid->particles.end()) {
     fcolor color = pi->color;
     glColor3f(color.r, color.g, color.b);
     //glColor3f(1.0f, 0.0f, 0.0f);
@@ -192,34 +187,16 @@ void set_uniform_parameters(unsigned int p)
 }
 
 
-void initParticleSim() {
-
-  srand (static_cast <unsigned> (time(0)));
-
-  fluid = new SPHSolver(50, 0.0f, 2.0f, 0.15);
-  fluid->update_function = LEAP_FROG;
-  fluid->party_mode = false;
-
-  // setting force parameters
-  fluid->force.density_base = 141.471060526f;
-  fluid->force.beta = 1.0f;
-  fluid->force.gamma = 3.0f;
-  fluid->force.viscosity = 1.0f;
-  fluid->force.epsilon = 0.1f;
-  fluid->max_velocity = 8.0f;
-}
-
-
-
 void callbackIdle() {
   float delta_time = (1.0f/48.0f);
-  fluid->update(delta_time);
+  current_level->fluid->update(delta_time);
   glutPostRedisplay();
 }
 
 
 void callbackKeyboard( unsigned char key, int x, int y )
 {
+  float gravity_magnitude = 2.5f;
   switch (key)
   {
     case 'q':
@@ -227,22 +204,22 @@ void callbackKeyboard( unsigned char key, int x, int y )
     exit(0);
 
     case 'w':
-      fluid->force.gravity = {0.0f, 9.8f};
+      current_level->fluid->force.gravity = {0.0f, gravity_magnitude};
       cout << "Gravity is now up" << endl;
       break;
 
     case 'a':
-      fluid->force.gravity = {-9.8f, 0.0f};
+      current_level->fluid->force.gravity = {-1.0f * gravity_magnitude, 0.0f};
       cout << "Gravity is now left" << endl;
       break;
 
     case 's':
-      fluid->force.gravity = {0.0f, -9.8f};
+      current_level->fluid->force.gravity = {0.0f, -1.0f * gravity_magnitude};
       cout << "Gravity is now down" << endl;
       break;
 
     case 'd':
-      fluid->force.gravity = {9.8f, 0.0f};
+      current_level->fluid->force.gravity = {gravity_magnitude, 0.0f};
       cout << "Gravity is now right" << endl;
       break;
     default:
@@ -250,10 +227,24 @@ void callbackKeyboard( unsigned char key, int x, int y )
   }
 }
 
+vector<gameLevel> levels;
+
+void storeLevels() {
+  levels.push_back(gameLevel(200, 0.0, 2.0, vector2(1.3f, 0.15f), vector2(1.75f, 0.0f), 0.15,
+                             (char *) "/home/awbrenn/Documents/workspace/fluid2D/sph-game/background2.ppm",
+                             (char *) "/home/awbrenn/Documents/workspace/fluid2D/sph-game/background2_ct.ppm"));
+}
+
+void loadLevel(int level_index) {
+  current_level = &levels[level_index];
+  load_background_texture(current_level->background_texture);
+  load_collision_texture(current_level->collision_texture);
+}
 
 int main(int argc, char **argv)
 {
-  initParticleSim();
+  storeLevels();
+
   glutInit(&argc,argv);
   glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA| GLUT_MULTISAMPLE);
   glutInitWindowPosition(100, 100);
@@ -261,8 +252,9 @@ int main(int argc, char **argv)
   glutCreateWindow("sph-game");
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_MULTISAMPLE_ARB);
-  load_collision_texture(argv[1]);
-  load_background_texture(argv[2]);
+
+  loadLevel(0);
+
   view_volume();
   sprogram = set_shaders();
   set_uniform_parameters(sprogram);

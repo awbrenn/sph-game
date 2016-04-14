@@ -11,6 +11,6 @@ find_library(GLUT "glut")
 find_library(GL "GL")
 find_library(GLU "GLU")
 
-set(SOURCE_FILES main_game.cpp SPHParticle.cpp SPHParticle.h SPHForce.cpp SPHForce.h SPHSolver.cpp SPHSolver.h vector2.cpp vector2.h SPHOccupancyVolume.cpp SPHOccupancyVolume.h)
+set(SOURCE_FILES main_game.cpp SPHParticle.cpp SPHParticle.h SPHForce.cpp SPHForce.h SPHSolver.cpp SPHSolver.h vector2.cpp vector2.h SPHOccupancyVolume.cpp SPHOccupancyVolume.h gameLevel.cpp gameLevel.h)
 add_executable(sph_particle ${SOURCE_FILES})
 target_link_libraries(sph_particle ${GLUT} ${GL} ${GLU} ${OIIO})

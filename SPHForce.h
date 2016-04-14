@@ -20,7 +20,7 @@ class SPHForce {
     float calculateViscocityForce(SPHParticle *b, SPHParticle *a, float h);
 
   public:
-    vector2 gravity = vector2(0.0f, -9.8f);
+    vector2 gravity = vector2(0.0f, -2.5f);
     float density_base;
     float gamma;
     float beta;
