@@ -240,8 +240,8 @@ void storeLevels() {
 
 void storeTextScreens() {
   game_controller.screens.push_back(textScreen((char *)"textures/art/title.ppm"));
-  game_controller.screens.push_back(textScreen((char *)"textures/art/title.ppm"));
-  game_controller.screens.push_back(textScreen((char *)"textures/art/title.ppm"));
+  game_controller.screens.push_back(textScreen((char *)"textures/art/screen1.ppm"));
+  game_controller.screens.push_back(textScreen((char *)"textures/art/game-over.ppm"));
 }
 
 void callbackIdle() {
@@ -252,8 +252,8 @@ void callbackIdle() {
             ((float) (game_controller.current_level->fluid->current_particles_count) /
              (float) (game_controller.current_level->fluid->start_particles_count));
     if (game_controller.level_completion == 1.0f) { loadScreen(game_controller.screen_index); }
-    glutPostRedisplay();
   }
+  glutPostRedisplay();
 }
 
 void callbackKeyboard( unsigned char key, int x, int y )
