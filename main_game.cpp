@@ -176,8 +176,8 @@ unsigned int set_shaders()
 
   v = glCreateShader(GL_VERTEX_SHADER);
   f = glCreateShader(GL_FRAGMENT_SHADER);
-  vs = read_shader_program((char *) "/home/awbrenn/Documents/workspace/fluid2D/sph-game/background_shader.vert");
-  fs = read_shader_program((char *) "/home/awbrenn/Documents/workspace/fluid2D/sph-game/background_shader.frag");
+  vs = read_shader_program((char *) "background_shader.vert");
+  fs = read_shader_program((char *) "background_shader.frag");
   glShaderSource(v,1,(const char **)&vs,NULL);
   glShaderSource(f,1,(const char **)&fs,NULL);
   free(vs);
@@ -220,8 +220,29 @@ void loadScreen(unsigned int screen_index) {
 
   // load screen background texture
   load_background_texture(game_controller.screens[screen_index].background_texture);
+
+  // check for game over condition
+  if (screen_index == game_controller.levels.size()) {
+    game_controller.game_over = true;
+    game_controller.level_index = 0;
+    game_controller.screen_index = 0;
+  }
 }
 
+void storeLevels() {
+  game_controller.levels.push_back(gameLevel(200, 0.0, 2.0, vector2(0.5f, 0.5f), vector2(0.5f, 0.2f), 0.15,
+                                             (char *) "textures/art/background.ppm",
+                                             (char *) "textures/collision/background_ct.ppm"));
+  game_controller.levels.push_back(gameLevel(200, 0.0, 2.0, vector2(1.3f, 0.15f), vector2(1.75f, 0.0f), 0.15,
+                                             (char *) "textures/art/background2.ppm",
+                                             (char *) "textures/collision/background2_ct.ppm"));
+}
+
+void storeTextScreens() {
+  game_controller.screens.push_back(textScreen((char *)"textures/art/title.ppm"));
+  game_controller.screens.push_back(textScreen((char *)"textures/art/title.ppm"));
+  game_controller.screens.push_back(textScreen((char *)"textures/art/title.ppm"));
+}
 
 void callbackIdle() {
   if (game_controller.game_mode == level) {
@@ -272,29 +293,26 @@ void callbackKeyboard( unsigned char key, int x, int y )
       }
       break;
     case (char) 13: // enter_pressed
-      if (game_controller.game_mode == screen) {
+      if (game_controller.game_mode == screen && !game_controller.game_over) {
         loadLevel(game_controller.level_index);
       }
+      else if (game_controller.game_mode == screen && game_controller.game_over) { // quiting when done
+        cout << "Thanks for playing!" << endl;
+        exit(0);
+      }
       break;
+    case 'r':
+      if (game_controller.game_over) { // replay
+        game_controller.levels.clear();
+        storeLevels();
+        game_controller.game_over = false;
+        loadScreen(game_controller.screen_index);
+      }
     default:
     break;
   }
 }
 
-
-void storeLevels() {
-  game_controller.levels.push_back(gameLevel(200, 0.0, 2.0, vector2(0.5f, 0.5f), vector2(0.5f, 0.2f), 0.15,
-                             (char *) "/home/awbrenn/Documents/workspace/fluid2D/sph-game/background.ppm",
-                             (char *) "/home/awbrenn/Documents/workspace/fluid2D/sph-game/background_ct.ppm"));
-  game_controller.levels.push_back(gameLevel(200, 0.0, 2.0, vector2(1.3f, 0.15f), vector2(1.75f, 0.0f), 0.15,
-                             (char *) "/home/awbrenn/Documents/workspace/fluid2D/sph-game/background2.ppm",
-                             (char *) "/home/awbrenn/Documents/workspace/fluid2D/sph-game/background2_ct.ppm"));
-}
-
-void storeTextScreens() {
-  game_controller.screens.push_back(textScreen((char *)"/home/awbrenn/Documents/workspace/fluid2D/sph-game/background2_ct.ppm"));
-  game_controller.screens.push_back(textScreen((char *)"/home/awbrenn/Documents/workspace/fluid2D/sph-game/background2_ct.ppm"));
-}
 
 int main(int argc, char **argv)
 {
