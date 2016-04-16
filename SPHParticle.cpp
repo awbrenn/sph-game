@@ -56,6 +56,8 @@ void SPHParticle::setCollisionArea(unsigned char *collision_texture, int width, 
 
   else if (color.r == 255 and color.g == 0 and color.b == 0) { new_carea = left_right; }
 
+  else if (color.r == 255 and color.g == 0 and color.b == 255) { new_carea = left_right_and_above_below; }
+
   else if (color.r == 0 and color.g == 255 and color.b == 1) { new_carea = finished; }
 
   // set new attributes;

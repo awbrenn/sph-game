@@ -236,11 +236,15 @@ void storeLevels() {
   game_controller.levels.push_back(gameLevel(200, 0.0, 2.0, vector2(1.3f, 0.15f), vector2(1.75f, 0.0f), 0.15,
                                              (char *) "textures/art/background2.ppm",
                                              (char *) "textures/collision/background2_ct.ppm"));
+  game_controller.levels.push_back(gameLevel(200, 0.0, 2.0, vector2(0.75f, 0.75f), vector2(1.75f, 0.0f), 0.15,
+                                             (char *) "textures/art/background3.ppm",
+                                             (char *) "textures/collision/background3_ct.ppm"));
 }
 
 void storeTextScreens() {
   game_controller.screens.push_back(textScreen((char *)"textures/art/title.ppm"));
   game_controller.screens.push_back(textScreen((char *)"textures/art/screen1.ppm"));
+  game_controller.screens.push_back(textScreen((char *)"textures/art/game-over.ppm"));
   game_controller.screens.push_back(textScreen((char *)"textures/art/game-over.ppm"));
 }
 
@@ -318,6 +322,9 @@ int main(int argc, char **argv)
 {
   storeLevels();
   storeTextScreens();
+
+  // debugging reasons
+//  game_controller.level_index = 2;
 
   glutInit(&argc,argv);
   glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA| GLUT_MULTISAMPLE);

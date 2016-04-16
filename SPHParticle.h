@@ -20,7 +20,7 @@ typedef enum collision_area {
   left_right = 0,
   above_below = 1,
   inside_obstruction = 2,
-  free_area = 3,
+  left_right_and_above_below = 3,
   finished = 4
 } collision_area;
 

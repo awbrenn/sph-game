@@ -93,6 +93,12 @@ void SPHSolver::enforceBoundary(SPHParticle *p) {
     collision = true;
   }
 
+  if (p->prev_carea == left_right_and_above_below and p->carea == inside_obstruction) {
+    bounceX(p);
+    bounceY(p);
+    collision = true;
+  }
+
   if (collision && party_mode) { randomizeColor(p); }
 }
 
