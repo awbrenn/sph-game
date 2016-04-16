@@ -20,7 +20,7 @@ using namespace std;
 float eye[] = {1.0f,1.0f,1.0f};
 float viewpt[] = {1.0,1.0,0.0};
 float up[] = {0.0,1.0,0.0};
-GLuint sprogram;
+GLuint sprogram[2];
 gameController game_controller;
 
 
@@ -102,9 +102,9 @@ void load_collision_texture(char *filename)
   fread(texture_bytes,3,im_size,fptr);
   fclose(fptr);
 
-  game_controller.current_level->fluid->collision_texture = texture_bytes;
-  game_controller.current_level->fluid->ct_width = im_width;
-  game_controller.current_level->fluid->ct_height = im_height;
+  game_controller.current_level->sph_fluid->collision_texture = texture_bytes;
+  game_controller.current_level->sph_fluid->ct_width = im_width;
+  game_controller.current_level->sph_fluid->ct_height = im_height;
 }
 
 void view_volume()
@@ -123,8 +123,8 @@ void drawParticles() {
   // draw particles
   glPointSize(7.5f);
   glBegin(GL_POINTS);
-  std::vector<SPHParticle>::iterator pi = game_controller.current_level->fluid->particles.begin();
-  while(pi != game_controller.current_level->fluid->particles.end()) {
+  std::vector<SPHParticle>::iterator pi = game_controller.current_level->sph_fluid->particles.begin();
+  while(pi != game_controller.current_level->sph_fluid->particles.end()) {
     fcolor color = pi->color;
     glColor3f(color.r, color.g, color.b);
     //glColor3f(1.0f, 0.0f, 0.0f);
@@ -139,6 +139,13 @@ void drawParticles() {
 }
 
 
+void drawRiver() {
+  glUseProgram(sprogram[1]) {
+
+  }
+}
+
+
 void render_scene()
 {
   int i;
@@ -148,7 +155,7 @@ void render_scene()
   glClearColor(0.0,0.0,0.0,1.0);
   glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
-  glUseProgram(sprogram);		// THIS IS IT!
+  glUseProgram(sprogram[0]);		// THIS IS IT!
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D,1);
   glEnable(GL_TEXTURE_2D);
@@ -163,21 +170,22 @@ void render_scene()
 
   if (game_controller.game_mode == level) {
     drawParticles();
+    drawRiver();
   }
 
   glutSwapBuffers();
 }
 
 
-unsigned int set_shaders()
+unsigned int set_shaders(char * vert, char * frag)
 {
   char *vs, *fs;
   GLuint v, f, p;
 
   v = glCreateShader(GL_VERTEX_SHADER);
   f = glCreateShader(GL_FRAGMENT_SHADER);
-  vs = read_shader_program((char *) "background_shader.vert");
-  fs = read_shader_program((char *) "background_shader.frag");
+  vs = read_shader_program(vert);
+  fs = read_shader_program(frag);
   glShaderSource(v,1,(const char **)&vs,NULL);
   glShaderSource(f,1,(const char **)&fs,NULL);
   free(vs);
@@ -251,10 +259,10 @@ void storeTextScreens() {
 void callbackIdle() {
   if (game_controller.game_mode == level) {
     float delta_time = (1.0f / 48.0f);
-    game_controller.current_level->fluid->update(delta_time);
+    game_controller.current_level->sph_fluid->update(delta_time);
     game_controller.level_completion = 1.0f -
-            ((float) (game_controller.current_level->fluid->current_particles_count) /
-             (float) (game_controller.current_level->fluid->start_particles_count));
+            ((float) (game_controller.current_level->sph_fluid->current_particles_count) /
+             (float) (game_controller.current_level->sph_fluid->start_particles_count));
     if (game_controller.level_completion == 1.0f) { loadScreen(game_controller.screen_index); }
   }
   glutPostRedisplay();
@@ -271,28 +279,28 @@ void callbackKeyboard( unsigned char key, int x, int y )
 
     case 'w':
       if (game_controller.game_mode == level) {
-        game_controller.current_level->fluid->force.gravity = {0.0f, gravity_magnitude};
+        game_controller.current_level->sph_fluid->force.gravity = {0.0f, gravity_magnitude};
         cout << "Gravity is now up" << endl;
       }
       break;
 
     case 'a':
       if (game_controller.game_mode == level) {
-        game_controller.current_level->fluid->force.gravity = {-1.0f * gravity_magnitude, 0.0f};
+        game_controller.current_level->sph_fluid->force.gravity = {-1.0f * gravity_magnitude, 0.0f};
         cout << "Gravity is now left" << endl;
       }
       break;
 
     case 's':
       if (game_controller.game_mode == level) {
-        game_controller.current_level->fluid->force.gravity = {0.0f, -1.0f * gravity_magnitude};
+        game_controller.current_level->sph_fluid->force.gravity = {0.0f, -1.0f * gravity_magnitude};
         cout << "Gravity is now down" << endl;
       }
       break;
 
     case 'd':
       if (game_controller.game_mode == level) {
-        game_controller.current_level->fluid->force.gravity = {gravity_magnitude, 0.0f};
+        game_controller.current_level->sph_fluid->force.gravity = {gravity_magnitude, 0.0f};
         cout << "Gravity is now right" << endl;
       }
       break;
@@ -337,8 +345,9 @@ int main(int argc, char **argv)
   loadScreen(0);
 
   view_volume();
-  sprogram = set_shaders();
-  set_uniform_parameters(sprogram);
+  sprogram[0] = set_shaders((char *) "background_shader.vert", (char *) "background_shader.frag");
+  sprogram[1] = set_shaders((char *) "river.vert", (char *) "river.frag");
+  set_uniform_parameters(sprogram[0]);
   glutDisplayFunc(render_scene);
   glutIdleFunc(&callbackIdle);
   glutKeyboardFunc(callbackKeyboard);
