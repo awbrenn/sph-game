@@ -13,13 +13,13 @@ CFDSolver::CFDSolver(const int nx, const int ny, const float dx, const float Dt,
   Ny = ny;
   Dx = dx;
   dt = Dt;
-  brush_size = 11;
+  brush_size = 33;
   source_brush = new float*[brush_size];
   for (int i = 0; i < brush_size; ++i) {source_brush[i] = new float[brush_size]; }
   InitializeBrushes();
   nloops = Nloops;
   oploops = Oploops;
-  gravityX = 9.8f;
+  gravityX = 100.0f;
   gravityY = 0.0f;
   density1 = new float[Nx*Ny]();
   density2 = new float[Nx*Ny]();
@@ -296,8 +296,13 @@ void CFDSolver::computeVelocityBasedOnPressureForces()
   }
 }
 
+bool run_once = true;
 void CFDSolver::sources()
 {
+  // add source
+  if (run_once) { addSource(Nx/2, Ny/2, PAINT_SOURCE); run_once = false; }
+
+
   // compute sources
   computeVelocity(gravityX, gravityY);
 
@@ -307,6 +312,12 @@ void CFDSolver::sources()
     computePressure();
     computeVelocityBasedOnPressureForces();
   }
+}
+
+void CFDSolver::update()
+{
+  sources();
+  advect();
 }
 
 
@@ -351,5 +362,16 @@ void CFDSolver::addSource( int x, int y, paint_mode mode) {
         density1[index] += source_brush[ix - xstart][iy - ystart];
       }
     }
+  }
+}
+
+void CFDSolver::convertColorToTexture() {
+  int count = 0;
+  for (int i = 0; i < Nx*Ny*3; ++i) {
+    river_texture[i] =  (unsigned char) (color1[i] * 255.0f);
+    count++;
+
+//    if (color1[i] > 0.5f) {
+//      std::cout << "there is color" << std::endl; }
   }
 }

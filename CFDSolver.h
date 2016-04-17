@@ -17,6 +17,7 @@ class CFDSolver
     // public methods
     void advect();
     void sources();
+    void update();
     // getters
     float* getColorPointer()    const { return color1; }
 
@@ -32,8 +33,11 @@ class CFDSolver
     int vIndex(int i, int j, int c) const { return (i+Nx*j)*2+c; }
     int cIndex(int i, int j, int c) const { return (i+Nx*j)*3+c; }
 
-  private:
     int     Nx, Ny;
+    unsigned char * river_texture;
+    void convertColorToTexture();
+
+  private:
     int     nloops; // number of loops for pressure calculation
     int     oploops; // number of orthogonal projection loops
     float   Dx;

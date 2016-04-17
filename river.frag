@@ -1,5 +1,5 @@
 // This is set by the .c code.
-uniform sampler2D mytexture;
+uniform sampler2D river_texture;
 
 void main()
 {

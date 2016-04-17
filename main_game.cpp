@@ -75,6 +75,36 @@ void load_background_texture(char *filename) {
   free(texture_bytes);
 }
 
+void load_river_texture() {
+  size_t texture_size;
+  unsigned char *texture_bytes;
+
+  texture_size = (size_t) game_controller.current_level->cfd_fluid->Nx * game_controller.current_level->cfd_fluid->Ny;
+  texture_bytes = (unsigned char *)calloc(3, texture_size);
+
+  game_controller.current_level->cfd_fluid->river_texture = texture_bytes;
+
+  glBindTexture(GL_TEXTURE_2D,2);
+  glTexImage2D(GL_TEXTURE_2D,0,GL_RGB, game_controller.current_level->cfd_fluid->Nx,
+               game_controller.current_level->cfd_fluid->Ny, 0, GL_RGB,
+               GL_UNSIGNED_BYTE,game_controller.current_level->cfd_fluid->river_texture);
+  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+  glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
+}
+
+void update_river_texture() {
+  game_controller.current_level->cfd_fluid->convertColorToTexture();
+
+  glBindTexture(GL_TEXTURE_2D,2);
+  glTexImage2D(GL_TEXTURE_2D,0,GL_RGB, game_controller.current_level->cfd_fluid->Nx,
+               game_controller.current_level->cfd_fluid->Ny, 0, GL_RGB,
+               GL_UNSIGNED_BYTE,game_controller.current_level->cfd_fluid->river_texture);
+  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+  glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
+}
+
 void load_collision_texture(char *filename)
 {
   FILE *fptr;
@@ -134,15 +164,31 @@ void drawParticles() {
     ++pi;
   }
   glEnd();
-  glFlush();
 
 }
 
 
 void drawRiver() {
-  glUseProgram(sprogram[1]) {
+  update_river_texture();
+  int i;
+//  float river_tile[4][3]={{0.0,0.0,0.1f},{2.0,0.0,0.1f},{2.0,0.5,0.1f},{0.0,0.5,0.1f}};
+  float river_tile[4][3]={{0.0,0.0,0.1f},{2.0,0.0,0.1f},{2.0,0.5,0.1f},{0.0,0.5,0.1f}};
+  float mytexcoords[4][2] = {{0.0,1.0},{1.0,1.0},{1.0,0.0},{0.0,0.0}};
 
+//  glEnable (GL_BLEND);
+//  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glUseProgram(sprogram[1]);
+  glActiveTexture(GL_TEXTURE1);
+  glBindTexture(GL_TEXTURE_2D,2);
+  glEnable(GL_TEXTURE_2D);
+  glBegin(GL_QUADS);
+  glNormal3f(0.0,0.0,1.0);
+  for(i=0;i<4;i++){
+    glTexCoord2fv(mytexcoords[i]);
+    glVertex3f(river_tile[i][0],river_tile[i][1],river_tile[i][2]);
   }
+  glEnd();
+//  glDisable(GL_BLEND);
 }
 
 
@@ -166,13 +212,14 @@ void render_scene()
     glVertex3f(front[i][0],front[i][1],front[i][2]);
   }
   glEnd();
-  glDisable(GL_TEXTURE_2D);
 
   if (game_controller.game_mode == level) {
-    drawParticles();
     drawRiver();
-  }
+    glDisable(GL_TEXTURE_2D);
+    drawParticles();
+  } else { glDisable(GL_TEXTURE_2D); }
 
+  glFlush();
   glutSwapBuffers();
 }
 
@@ -200,10 +247,10 @@ unsigned int set_shaders(char * vert, char * frag)
   return(p);
 }
 
-void set_uniform_parameters(unsigned int p)
+void set_uniform_parameters(unsigned int p, char * texture_name)
 {
   int location;
-  location = glGetUniformLocation(p,"mytexture");
+  location = glGetUniformLocation(p, texture_name);
   glUniform1i(location,0);
 }
 
@@ -218,6 +265,7 @@ void loadLevel(unsigned int level_index) {
   // load textures
   load_background_texture(game_controller.current_level->background_texture);
   load_collision_texture(game_controller.current_level->collision_texture);
+  load_river_texture();
 }
 
 void loadScreen(unsigned int screen_index) {
@@ -238,13 +286,13 @@ void loadScreen(unsigned int screen_index) {
 }
 
 void storeLevels() {
-  game_controller.levels.push_back(gameLevel(200, 0.0, 2.0, vector2(0.5f, 0.5f), vector2(0.5f, 0.2f), 0.15,
+  game_controller.levels.push_back(gameLevel(200, 0.0, 2.0, vector2(0.5f, 0.5f), vector2(0.5f, 0.2f), 0.15, 1024, 256,
                                              (char *) "textures/art/background.ppm",
                                              (char *) "textures/collision/background_ct.ppm"));
-  game_controller.levels.push_back(gameLevel(200, 0.0, 2.0, vector2(1.3f, 0.15f), vector2(1.75f, 0.0f), 0.15,
+  game_controller.levels.push_back(gameLevel(200, 0.0, 2.0, vector2(1.3f, 0.15f), vector2(1.75f, 0.0f), 0.15, 1024, 256,
                                              (char *) "textures/art/background2.ppm",
                                              (char *) "textures/collision/background2_ct.ppm"));
-  game_controller.levels.push_back(gameLevel(200, 0.0, 2.0, vector2(0.75f, 0.75f), vector2(1.75f, 0.0f), 0.15,
+  game_controller.levels.push_back(gameLevel(200, 0.0, 2.0, vector2(0.75f, 0.75f), vector2(1.75f, 0.0f), 0.15, 1024, 256,
                                              (char *) "textures/art/background3.ppm",
                                              (char *) "textures/collision/background3_ct.ppm"));
 }
@@ -260,6 +308,7 @@ void callbackIdle() {
   if (game_controller.game_mode == level) {
     float delta_time = (1.0f / 48.0f);
     game_controller.current_level->sph_fluid->update(delta_time);
+    game_controller.current_level->cfd_fluid->update();
     game_controller.level_completion = 1.0f -
             ((float) (game_controller.current_level->sph_fluid->current_particles_count) /
              (float) (game_controller.current_level->sph_fluid->start_particles_count));
@@ -347,7 +396,8 @@ int main(int argc, char **argv)
   view_volume();
   sprogram[0] = set_shaders((char *) "background_shader.vert", (char *) "background_shader.frag");
   sprogram[1] = set_shaders((char *) "river.vert", (char *) "river.frag");
-  set_uniform_parameters(sprogram[0]);
+  set_uniform_parameters(sprogram[0], (char *) "mytexture");
+  set_uniform_parameters(sprogram[1], (char *) "river_texture");
   glutDisplayFunc(render_scene);
   glutIdleFunc(&callbackIdle);
   glutKeyboardFunc(callbackKeyboard);
