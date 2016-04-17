@@ -365,10 +365,10 @@ void CFDSolver::addSource( int x, int y, paint_mode mode) {
   }
 }
 
+int count = 0;
 void CFDSolver::convertColorToTexture() {
-  int count = 0;
   for (int i = 0; i < Nx*Ny*3; ++i) {
-    river_texture[i] =  (unsigned char) (color1[i] * 255.0f);
+    river_texture[i] =  count % 255;//(unsigned char) (color1[i] * 255.0f);
     count++;
 
 //    if (color1[i] > 0.5f) {

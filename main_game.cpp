@@ -188,6 +188,7 @@ void drawRiver() {
     glVertex3f(river_tile[i][0],river_tile[i][1],river_tile[i][2]);
   }
   glEnd();
+  glDisable(GL_TEXTURE_2D);
 //  glDisable(GL_BLEND);
 }
 
@@ -215,7 +216,6 @@ void render_scene()
 
   if (game_controller.game_mode == level) {
     drawRiver();
-    glDisable(GL_TEXTURE_2D);
     drawParticles();
   } else { glDisable(GL_TEXTURE_2D); }
 
