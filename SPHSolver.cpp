@@ -221,15 +221,13 @@ void SPHSolver::leapFrog(float dt) {
 
   pi = particles.begin();
   while(pi != particles.end()) {
-    float base_percentage, red_percentage, blue_percentage;
+    float base_percentage;
     base_percentage = pi->velocity.length() / highest_velocity;
+    if (base_percentage > 0.8) {base_percentage = 0.8;}
 
-    red_percentage = base_percentage;
-    blue_percentage = 1.0f - red_percentage;
-
-    pi->color.r = red_percentage;
-    pi->color.g = 0.0f;
-    pi->color.b = blue_percentage;
+    pi->color.r = 1.0f - base_percentage;
+    pi->color.g = base_percentage;
+    pi->color.b = 0.78;
 
     ++pi;
   }

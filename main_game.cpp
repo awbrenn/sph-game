@@ -188,7 +188,6 @@ unsigned int set_shaders()
   glAttachShader(p,f);
   glAttachShader(p,v);
   glLinkProgram(p);
-// glUseProgram(p);
   return(p);
 }
 
@@ -239,12 +238,16 @@ void storeLevels() {
   game_controller.levels.push_back(gameLevel(200, 0.0, 2.0, vector2(0.75f, 0.75f), vector2(1.75f, 0.0f), 0.15,
                                              (char *) "textures/art/background3.ppm",
                                              (char *) "textures/collision/background3_ct.ppm"));
+  game_controller.levels.push_back(gameLevel(120, 0.0, 2.0, vector2(0.05f, 1.80f), vector2(1.80f, 0.05f), 0.15,
+                                             (char *) "textures/art/background4.ppm",
+                                             (char *) "textures/collision/background4_ct.ppm"));
 }
 
 void storeTextScreens() {
   game_controller.screens.push_back(textScreen((char *)"textures/art/title.ppm"));
   game_controller.screens.push_back(textScreen((char *)"textures/art/screen1.ppm"));
-  game_controller.screens.push_back(textScreen((char *)"textures/art/game-over.ppm"));
+  game_controller.screens.push_back(textScreen((char *)"textures/art/screen2.ppm"));
+  game_controller.screens.push_back(textScreen((char *)"textures/art/screen3.ppm"));
   game_controller.screens.push_back(textScreen((char *)"textures/art/game-over.ppm"));
 }
 
@@ -272,28 +275,24 @@ void callbackKeyboard( unsigned char key, int x, int y )
     case 'w':
       if (game_controller.game_mode == level) {
         game_controller.current_level->fluid->force.gravity = {0.0f, gravity_magnitude};
-        cout << "Gravity is now up" << endl;
       }
       break;
 
     case 'a':
       if (game_controller.game_mode == level) {
         game_controller.current_level->fluid->force.gravity = {-1.0f * gravity_magnitude, 0.0f};
-        cout << "Gravity is now left" << endl;
       }
       break;
 
     case 's':
       if (game_controller.game_mode == level) {
         game_controller.current_level->fluid->force.gravity = {0.0f, -1.0f * gravity_magnitude};
-        cout << "Gravity is now down" << endl;
       }
       break;
 
     case 'd':
       if (game_controller.game_mode == level) {
         game_controller.current_level->fluid->force.gravity = {gravity_magnitude, 0.0f};
-        cout << "Gravity is now right" << endl;
       }
       break;
     case (char) 13: // enter_pressed
@@ -323,8 +322,8 @@ int main(int argc, char **argv)
   storeLevels();
   storeTextScreens();
 
-  // debugging reasons
-//  game_controller.level_index = 2;
+//   debugging reasons
+//  game_controller.level_index = 3;
 
   glutInit(&argc,argv);
   glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA| GLUT_MULTISAMPLE);
