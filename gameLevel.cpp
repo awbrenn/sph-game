@@ -16,7 +16,7 @@ gameLevel::gameLevel(unsigned int number_of_particles, float lower_bound, float 
   fluid->force.gamma = 3.0f;
   fluid->force.viscosity = 1.0f;
   fluid->force.epsilon = 0.1f;
-  fluid->max_velocity = 8.0f;
+  fluid->max_velocity = 3.0f;
 
   background_texture = _background_texture;
   collision_texture = _collision_texture;

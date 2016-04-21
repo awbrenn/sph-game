@@ -284,11 +284,14 @@ void callbackIdle() {
 void callbackKeyboard( unsigned char key, int x, int y )
 {
   float gravity_magnitude = 2.5f;
+
   switch (key)
   {
     case 'q':
-    cout << "Exiting Program" << endl;
-    exit(0);
+      cout << "Exiting Program" << endl;
+      cout << getWindowTitle() << endl;
+      cout << "Try to finish next time and your score will count." << endl;
+      exit(0);
 
     case 'w':
       if (game_controller.game_mode == level) {
@@ -319,6 +322,7 @@ void callbackKeyboard( unsigned char key, int x, int y )
       }
       else if (game_controller.game_mode == screen && game_controller.game_over) { // quiting when done
         cout << "Thanks for playing!" << endl;
+        cout << getWindowTitle() << endl;
         exit(0);
       }
       break;

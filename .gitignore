@@ -4,3 +4,6 @@ sph_fluid_simulator
 .idea/
 sph_particle
 .nfs*
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
