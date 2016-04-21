@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <math.h>
 #include <unistd.h>
+#include <sstream>
 #include "SPHSolver.h"
 #include "gameLevel.h"
 #include "textScreen.h"
@@ -22,6 +23,21 @@ float viewpt[] = {1.0,1.0,0.0};
 float up[] = {0.0,1.0,0.0};
 GLuint sprogram;
 gameController game_controller;
+
+
+string getWindowTitle()
+{
+  string window_title;
+
+  ostringstream score_string_stream;
+  score_string_stream.precision(2);
+  score_string_stream << fixed << game_controller.total_time;
+  string score_string(score_string_stream.str());
+
+  window_title = string("Nature's Tap ") + score_string;
+
+  return window_title;
+}
 
 
 char *read_shader_program(char *filename)
@@ -255,10 +271,12 @@ void callbackIdle() {
   if (game_controller.game_mode == level) {
     float delta_time = (1.0f / 48.0f);
     game_controller.current_level->fluid->update(delta_time);
+    game_controller.total_time += delta_time;
     game_controller.level_completion = 1.0f -
             ((float) (game_controller.current_level->fluid->current_particles_count) /
              (float) (game_controller.current_level->fluid->start_particles_count));
     if (game_controller.level_completion == 1.0f) { loadScreen(game_controller.screen_index); }
+    glutSetWindowTitle(getWindowTitle().c_str());
   }
   glutPostRedisplay();
 }
@@ -324,12 +342,11 @@ int main(int argc, char **argv)
 
 //   debugging reasons
 //  game_controller.level_index = 3;
-
   glutInit(&argc,argv);
   glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA| GLUT_MULTISAMPLE);
   glutInitWindowPosition(100, 100);
   glutInitWindowSize(768,768);
-  glutCreateWindow("sph-game");
+  glutCreateWindow(getWindowTitle().c_str());
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_MULTISAMPLE_ARB);
 

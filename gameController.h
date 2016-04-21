@@ -19,6 +19,7 @@ class gameController {
     unsigned int level_index = 0;
     unsigned int screen_index = 0;
     float level_completion = 0.0f;
+    float total_time = 0.0f;
     bool game_over = false;
     gameLevel * current_level;
     std::vector<gameLevel> levels;
